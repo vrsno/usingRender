@@ -1,80 +1,88 @@
 const express = require("express");
+const cors = require("cors");
+const path = require("path");
+
 const app = express();
 
+// Habilitar CORS para evitar problemas de acceso entre frontend y backend
+app.use(cors());
+app.use(express.json());
+
+// Datos de prueba
 let notes = [
+  { id: 1, content: "HTML is easy", important: true },
+  { id: 2, content: "Browser can execute only JavaScript", important: false },
   {
-    id: "1",
-    content: "HTML is easy",
-    important: true,
-  },
-  {
-    id: "2",
-    content: "Browser can execute only JavaScript",
-    important: false,
-  },
-  {
-    id: "3",
+    id: 3,
     content: "GET and POST are the most important methods of HTTP protocol",
     important: true,
   },
 ];
 
-app.use(express.json());
+// Servir el frontend desde la carpeta "dist"
+app.use(express.static("dist"));
 
-app.get("/", (request, response) => {
-  response.send("<h1>Hello Worldsdsd!</h1>");
+// Endpoint para verificar que el servidor está funcionando
+app.get("/", (req, res) => {
+  res.send("<h1>¡Servidor en ejecución!</h1>");
 });
 
-app.get("/api/notes", (request, response) => {
-  response.json(notes);
+// Obtener todas las notas
+app.get("/api/notes", (req, res) => {
+  res.json(notes);
 });
 
-app.get("/api/notes/:id", (request, response) => {
-  const id = request.params.id;
+// Obtener una nota específica por ID
+app.get("/api/notes/:id", (req, res) => {
+  const id = parseInt(req.params.id);
   const note = notes.find((note) => note.id === id);
 
   if (note) {
-    response.json(note);
+    res.json(note);
   } else {
-    response.status(404).end();
+    res.status(404).json({ error: "Nota no encontrada" });
   }
 });
 
+// Generar un nuevo ID único
 const generateId = () => {
-  const maxId =
-    notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0;
-  return String(maxId + 1);
+  const maxId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) : 0;
+  return maxId + 1;
 };
 
-app.post("/api/notes", (request, response) => {
-  const body = request.body;
+// Crear una nueva nota
+app.post("/api/notes", (req, res) => {
+  const { content, important } = req.body;
 
-  if (!body.content) {
-    return response.status(400).json({
-      error: "content missing",
-    });
+  if (!content) {
+    return res.status(400).json({ error: "El contenido es obligatorio" });
   }
 
   const note = {
-    content: body.content,
-    important: body.important || false,
     id: generateId(),
+    content,
+    important: important || false,
   };
 
   notes = notes.concat(note);
-
-  response.json(note);
+  res.json(note);
 });
 
-app.delete("/api/notes/:id", (request, response) => {
-  const id = request.params.id;
+// Eliminar una nota por ID
+app.delete("/api/notes/:id", (req, res) => {
+  const id = parseInt(req.params.id);
   notes = notes.filter((note) => note.id !== id);
 
-  response.status(204).end();
+  res.status(204).end();
 });
 
-const PORT = process.env.PORT || 3001;
+// Servir el frontend en caso de rutas desconocidas
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
 
+// Definir puerto para Render u otro servidor
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
