@@ -1,0 +1,7 @@
+POST http://localhost:3001/api/notes
+content-Type: application/json
+
+{
+    "content": "Ensure that everything still works",
+    "important": true
+}

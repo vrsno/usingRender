@@ -1,3 +1,5 @@
+require("dotenv").config();
+const Note = require("./models/notes");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -28,20 +30,28 @@ app.get("/", (req, res) => {
 });
 
 // Obtener todas las notas
-app.get("/api/notes", (req, res) => {
-  res.json(notes);
+app.get("/api/notes", (request, response) => {
+  Note.find({}).then((notes) => {
+    response.json(notes);
+  });
 });
 
 // Obtener una nota específica por ID
-app.get("/api/notes/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const note = notes.find((note) => note.id === id);
+// app.get("/api/notes/:id", (req, res) => {
+//   const id = parseInt(req.params.id);
+//   const note = notes.find((note) => note.id === id);
 
-  if (note) {
-    res.json(note);
-  } else {
-    res.status(404).json({ error: "Nota no encontrada" });
-  }
+//   if (note) {
+//     res.json(note);
+//   } else {
+//     res.status(404).json({ error: "Nota no encontrada" });
+//   }
+// });
+
+app.get("/api/notes/:id", (request, response) => {
+  Note.findById(request.params.id).then((note) => {
+    response.json(note);
+  });
 });
 
 // Generar un nuevo ID único
@@ -51,21 +61,21 @@ const generateId = () => {
 };
 
 // Crear una nueva nota
-app.post("/api/notes", (req, res) => {
-  const { content, important } = req.body;
+app.post("/api/notes", (request, response) => {
+  const body = request.body;
 
-  if (!content) {
-    return res.status(400).json({ error: "El contenido es obligatorio" });
+  if (body.content === undefined) {
+    return response.status(400).json({ error: "content missing" });
   }
 
-  const note = {
-    id: generateId(),
-    content,
-    important: important || false,
-  };
+  const note = new Note({
+    content: body.content,
+    important: body.important || false,
+  });
 
-  notes = notes.concat(note);
-  res.json(note);
+  note.save().then((savedNote) => {
+    response.json(savedNote);
+  });
 });
 
 // Eliminar una nota por ID
@@ -82,7 +92,7 @@ app.get("*", (req, res) => {
 });
 
 // Definir puerto para Render u otro servidor
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
