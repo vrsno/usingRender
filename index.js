@@ -4,8 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const app = express();
+const app = require("./app"); // la aplicación Express real
+const config = require("./utils/config");
+const logger = require("./utils/logger");
 
+app.listen(config.PORT, () => {
+  logger.info(`Server running on port ${config.PORT}`);
+});
 // Habilitar CORS para evitar problemas de acceso entre frontend y backend
 app.use(cors());
 app.use(express.json());
@@ -116,12 +121,6 @@ app.put("/api/notes/:id", (request, response, next) => {
 // Servir el frontend en caso de rutas desconocidas
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
-});
-
-// Definir puerto para Render u otro servidor
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
 
 // controlador de errores
