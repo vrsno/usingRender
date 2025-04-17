@@ -1,5 +1,6 @@
 require("dotenv").config();
 const Note = require("./models/notes");
+const User = require("./models/user");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -32,6 +33,12 @@ app.use(express.static("dist"));
 // Endpoint para verificar que el servidor está funcionando
 app.get("/", (req, res) => {
   res.send("<h1>¡Servidor en ejecución!</h1>");
+});
+
+app.get("/api/users", (req, res) => {
+  User.find({}).then((users) => {
+    res.json(users);
+  });
 });
 
 // Obtener todas las notas
